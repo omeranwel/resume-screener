@@ -1,0 +1,3 @@
+[flake8]
+exclude = .venv, .git, __pycache__, venv, .tox, .nox, .coverage, build, dist
+max-line-length = 120 
