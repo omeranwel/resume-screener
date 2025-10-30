@@ -3,33 +3,14 @@ name: CI Workflow
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger on pull requests to main branch
+      - main
 
 jobs:
   lint:
-    runs-on: ubuntu-latest  # This defines the environment to run the actions in.
-    
-    steps:
-      - uses: actions/checkout@v2  # Check out the repository code
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'  # Specify the version of Python to use.
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Install dependencies listed in requirements.txt
-      - name: Lint with flake8
-        run: |
-          pip install flake8  # Install flake8 for linting
-          flake8 .  # Lint the entire project directory
-
-  test:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -39,7 +20,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt  # Install pytest and other dependencies
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          flake8 .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # Install pytest here
       - name: Run tests with pytest
         run: |
-          pytest --maxfail=1 --disable-warnings -q  # Run tests and stop after one failure
+          pytest --maxfail=1 --disable-warnings -q  # Run tests
