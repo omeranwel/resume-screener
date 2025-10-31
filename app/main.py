@@ -24,14 +24,27 @@ gpu_util_gauge.set(0.0)
 app = FastAPI(
     title="Resume Screener API",
     description="""
-    This API compares resumes with job descriptions using TF-IDF and cosine similarity.
-    It returns a similarity score and categorizes match level as High, Medium, or Low.
+    This API compares resumes against job descriptions using TF-IDF and cosine similarity.
+
+    **Main Endpoints:**
+    * `/screen_resume/` — POST endpoint to upload a resume & job description and receive a similarity score.
+    * `/` — Root endpoint showing service status.
+
+    **Technologies Used:**
+    * FastAPI for API framework
+    * Scikit-learn for TF-IDF
+    * Docker for containerization
+    * Prometheus + Grafana for monitoring
     """,
     version="1.0.0",
     contact={
-        "name": "Omer",
+        "name": "Omer Anwel",
         "url": "https://github.com/omeranwel/resume-screener",
         "email": "omer@example.com",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
     },
 )
 
@@ -47,17 +60,32 @@ class ResumeData(BaseModel):
     job_description: str
 
 
-@app.get("/")
+@app.get(
+    "/",
+    tags=["General Info"],
+    summary="Root Endpoint",
+    response_description="API status message",
+)
 def read_root():
     return {"message": "Welcome to the Resume Screener API!"}
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["Health Check"],
+    summary="Health Check",
+    response_description="Service health status",
+)
 def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/screen_resume/")
+@app.post(
+    "/screen_resume/",
+    tags=["Resume Matching"],
+    summary="Compare a resume to a job description and return a match score",
+    response_description="Similarity score and category of match level",
+)
 def screen_resume(data: ResumeData):
     # Extract resume and job description from the request
     resume = data.resume
