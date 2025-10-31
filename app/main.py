@@ -21,7 +21,19 @@ gpu_util_gauge = Gauge(
 )
 gpu_util_gauge.set(0.0)
 
-app = FastAPI()
+app = FastAPI(
+    title="Resume Screener API",
+    description="""
+    This API compares resumes with job descriptions using TF-IDF and cosine similarity.
+    It returns a similarity score and categorizes match level as High, Medium, or Low.
+    """,
+    version="1.0.0",
+    contact={
+        "name": "Omer",
+        "url": "https://github.com/omeranwel/resume-screener",
+        "email": "omer@example.com",
+    },
+)
 
 
 instrumentator = Instrumentator().instrument(app)
