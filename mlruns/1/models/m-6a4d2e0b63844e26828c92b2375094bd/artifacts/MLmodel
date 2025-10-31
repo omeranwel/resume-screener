@@ -1,0 +1,22 @@
+artifact_path: file:C:/Users/Omer/resume-screener/mlruns/1/models/m-6a4d2e0b63844e26828c92b2375094bd/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.10
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.2
+mlflow_version: 3.5.1
+model_id: m-6a4d2e0b63844e26828c92b2375094bd
+model_size_bytes: 4220
+model_uuid: m-6a4d2e0b63844e26828c92b2375094bd
+prompts: null
+run_id: a0ee2c59ed6e41f18ee22b70a222b8f4
+utc_time_created: '2025-10-31 09:53:02.562276'

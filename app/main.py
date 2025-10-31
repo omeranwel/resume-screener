@@ -2,9 +2,30 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Gauge
+import asyncio
 
+# Optional GPU: safe fallback to zero if no GPU
+GPU_AVAILABLE = False
+try:
+    import pynvml
+
+    pynvml.nvmlInit()
+    GPU_AVAILABLE = True
+except Exception:
+    GPU_AVAILABLE = False
+
+gpu_util_gauge = Gauge(
+    "gpu_utilization_percent", "Current total GPU utilization (percent)"
+)
+gpu_util_gauge.set(0.0)
 
 app = FastAPI()
+
+
+instrumentator = Instrumentator().instrument(app)
+instrumentator.expose(app, endpoint="/metrics", include_in_schema=False)
 
 
 # Pydantic model for request validation
@@ -19,6 +40,11 @@ def read_root():
     return {"message": "Welcome to the Resume Screener API!"}
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 @app.post("/screen_resume/")
 def screen_resume(data: ResumeData):
     # Extract resume and job description from the request
@@ -26,7 +52,7 @@ def screen_resume(data: ResumeData):
     job_description = data.job_description
 
     # Initialize the TF-IDF vectorizer
-    tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_vectorizer = TfidfVectorizer(stop_words="english")
 
     # Combine the resume and job description into a single list
     documents = [resume, job_description]
@@ -50,4 +76,44 @@ def screen_resume(data: ResumeData):
         similarity_category = "Low"
 
     # Return the similarity score as a response
-    return {"similarity_score": similarity_matrix[0][0], "category": similarity_category}
+    return {
+        "similarity_score": similarity_matrix[0][0],
+        "category": similarity_category,
+    }
+
+
+async def poll_gpu_forever():
+    """Update GPU metric every 10s. If no GPU, keep 0."""
+    while True:
+        try:
+            if GPU_AVAILABLE:
+                # Sum utilization across all GPUs
+                count = pynvml.nvmlDeviceGetCount()
+                total = 0
+                for i in range(count):
+                    h = pynvml.nvmlDeviceGetHandleByIndex(i)
+                    util = pynvml.nvmlDeviceGetUtilizationRates(h)
+                    total += util.gpu  # percent
+                avg = total / max(1, count)
+                gpu_util_gauge.set(avg)
+            else:
+                gpu_util_gauge.set(0.0)
+        except Exception:
+            gpu_util_gauge.set(0.0)
+        await asyncio.sleep(10)
+
+
+# type: ignore[attr-defined]
+@app.on_event("startup")
+async def _startup():
+    instrumentator.expose(app, endpoint="/metrics", include_in_schema=False)
+    asyncio.create_task(poll_gpu_forever())
+
+
+@app.on_event("shutdown")
+def _shutdown():
+    if GPU_AVAILABLE:
+        try:
+            pynvml.nvmlShutdown()
+        except Exception:
+            pass

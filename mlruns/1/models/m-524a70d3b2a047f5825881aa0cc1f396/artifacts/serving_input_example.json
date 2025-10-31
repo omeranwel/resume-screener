@@ -1,0 +1,12 @@
+{
+  "dataframe_split": {
+    "columns": [
+      "text"
+    ],
+    "data": [
+      [
+        "Python developer with FastAPI and ML experience, scikit-learn, Docker || Looking for Python developer experienced with FastAPI and ML"
+      ]
+    ]
+  }
+}
